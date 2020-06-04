@@ -7,7 +7,6 @@ import Toast from 'react-native-simple-toast';
 import Header from './Header';
 import MyListItem from './MyListItem';
 import getProductByType from './api/getProductByType';
-import Global from './Global';
 
 export default class ListProducts extends Component {
     constructor(props) {
@@ -61,7 +60,7 @@ export default class ListProducts extends Component {
                     <FlatList
                         data={this.state.data}
                         keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => ( // tai sao them dau ngoac {}???
+                        renderItem={({ item }) => ( 
                             <MyListItem
                                 id={item.id}
                                 data={item}

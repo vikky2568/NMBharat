@@ -7,4 +7,6 @@ module.exports = {
     onSignIn: null,
     setListData: null,
     removeCart: null,
+    updateCart:null,
+    customerInfo:''
 };

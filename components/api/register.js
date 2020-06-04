@@ -1,15 +1,15 @@
 import { localhost } from '../localhost';
 
-const register = (email, name, password, phone) => (
-    fetch(`http://${localhost}/AppBanHangServer/register.php`, {
+const register = (firstName, lastName, email, password, rePassword) => (
+    fetch(`http://${localhost}/rest/s1/pop/register`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json'
         },
-        body: JSON.stringify({ email, name, password, phone })
+        body: JSON.stringify({ "firstName": firstName, "lastName": lastName, "emailAddress": email, "newPassword": password, "newPasswordVerify": rePassword })
     })
-    .then(res => res.text())
+    .then(res => res.json())
 );
 
 export default register;

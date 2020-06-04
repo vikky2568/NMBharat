@@ -3,6 +3,7 @@ import HomeView from './HomeView';
 import ProductDetails from './ProductDetails';
 import ListProducts from './ListProducts';
 import ListProductsInCollection from './ListProductsInCollection';
+import CustomerShippingAddress from './CustomerShippingAddress';
 
 const stackRouteConfigs = {
   ProductDetails: {
@@ -17,6 +18,9 @@ const stackRouteConfigs = {
   ListProductsInCollection: {
     screen: ListProductsInCollection,
   },
+  CustomerShippingAddress: {
+    screen: CustomerShippingAddress
+  }
 };
 const stackNavigatorConfig = {
   initialRouteName: 'HomeView',

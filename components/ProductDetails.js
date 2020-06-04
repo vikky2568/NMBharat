@@ -2,18 +2,16 @@ import React, { Component } from 'react';
 import {
     View, Text, StyleSheet, Image, Dimensions, ScrollView, TouchableOpacity,ImageBackground
 } from 'react-native';
-//import { withNavigationFocus } from 'react-navigation';
-import { localhost } from './localhost';
+
 import Swiper from 'react-native-swiper';
 
 import Global from './Global';
 import Header from './Header';
 import getProductById from './api/getProductById';
+import saveCart from './api/saveCart';
+import {localhost} from './localhost';
+import getToken from './api/getToken'
 
-// const back = require('../assets/appIcon/back.png');
-// const cart = require('../assets/appIcon/cart.png');
-
-const imageUrl = `http://${localhost}/AppBanHangServer/images/product/`;
 
 export default class ProductDetails extends Component {
     
@@ -21,16 +19,28 @@ export default class ProductDetails extends Component {
         super(props);
         this.state = {
             product: [],
-            contentList: []
+            contentList: [],
+            orderItemSeqId:'',
+            orderId:''
         };
     }
     addThisProductToCart(product) {
-        Global.addProductToCart(product);
-        this.refreshPage;
-  }
-
-  refreshPage() {
-    window.location.reload(false);
+        getToken()
+        .then(token => token !== '' ?
+        saveCart(product.productId, '1', product.priceUomId, '')
+        .then(res => {
+            if (res.orderItemList[0].productId){
+                res.orderItemList.map( e => 
+                    e.productId === product.productId &&
+                    this.setState({orderItemSeqId: e.orderItemSeqId, orderId: e.orderId})
+            );   
+                Global.addProductToCart(product, 1, this.state.orderItemSeqId, this.state.orderId);
+                this.props.navigation.navigate('Cart')
+            }
+        })
+         : this.props.navigation.navigate('SignIn')
+    ); 
+        //Global.addProductToCart(product);
   }
 
   componentDidMount() {
@@ -67,7 +77,7 @@ export default class ProductDetails extends Component {
                         </TouchableOpacity>
                     </View>
                     <View style={imageContainer}>
-                    <Swiper width={swiperWidth} height={swiperHeight} autoplay >    
+                    <Swiper width={swiperWidth} height={swiperHeight} autoplay>    
                     {this.state.contentList.map(e => 
                         e.productContentTypeEnumId ==='PcntImageLarge' &&
                             (  
@@ -76,7 +86,7 @@ export default class ProductDetails extends Component {
                             onPress={() => ''}
                         >  
                                 <ImageBackground
-                                    source={{ uri: 'http://192.168.122.1:8080/store/content/productImage/'+e.productContentId  }}
+                                    source={{ uri: 'http://'+localhost+'/store/content/productImage/'+e.productContentId  }}
                                     style={styles.imageStyle}
 
                                 >

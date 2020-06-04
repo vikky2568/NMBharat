@@ -1,9 +1,6 @@
 import React, { Component } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import { localhost } from './localhost';
 
-
-const imageUrl = `http://${localhost}/AppBanHangServer/images/product/`;
 
 export default class MyListItem extends Component {
     render() {
@@ -17,7 +14,7 @@ export default class MyListItem extends Component {
             <View style={productContainer}>
                 <Image
                     style={productImage}
-                    source={{ uri: imageUrl + images[0] }}
+                    source={{ uri: images[0] }}
                 />
                 <View style={productInfo}>
 

@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'reac
 import logIn from './api/logIn';
 import Global from './Global';
 import saveToken from './api/saveToken';
-import Home from './Home';
+import saveCustomerInfo from './api/saveCustomerInfo';
 
 export default class SignIn extends Component {
     constructor(props) {
@@ -19,8 +19,9 @@ export default class SignIn extends Component {
             .then(res => {
                 if (res) {
                     //Alert.alert('SignIn successfully!');
-                    saveToken(res.moquiSessionToken);
-                    Global.onSignIn(res.customerInfo.firstName);
+                    saveToken(res.apiKey);
+                    saveCustomerInfo(res.customerInfo);
+                    Global.onSignIn(res.customerInfo);
                     this.props.navigation.goBack();
                 } else {
                     Alert.alert('SignIn failed!');

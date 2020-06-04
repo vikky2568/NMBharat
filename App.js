@@ -1,37 +1,25 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow
- */
+
 import { Image, Dimensions, Text, View } from 'react-native';
 import React from 'react';
 
-//import { createStackNavigator } from 'react-navigation';
-//import Authencation from './components/Authencation';
-//import ChangeInfo from './components/ChangeInfo';
-//import Main from './components/Main';
-//import OrderHistory from './components/OrderHistory';
 import { createBottomTabNavigator } from 'react-navigation-tabs';
 import { createDrawerNavigator } from 'react-navigation-drawer';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createAppContainer } from 'react-navigation';
 import Home from './components/Home';
-import Cart from './components/Cart';
 import Search from './components/Search';
-import Contact from './components/Contact';
 import OrderHistory from './components/OrderHistory';
 import ChangeInfo from './components/ChangeInfo';
 import Authencation from './components/Authencation';
-//import ProductDetails from './components/ProductDetails';
-//import Header from './components/Header';
 import CustomDrawerContentComponent from './components/CustomDrawerContentComponent';
-//import NavigationService from './components/NavigationService';
 import Global from './components/Global';
-import saveCart from './components/api/saveCart';
+import Cart from './components/Cart';
+import updateQuantity from './components/api/updateQuantity';
+import getCustomerCart from './components/api/getCustomerCart';
+import getProductById from './components/api/getProductById';
+import getToken from './components/api/getToken';
+import addCart from './components/api/addCart';
 import getCart from './components/api/getCart';
-import SplashScreen from 'react-native-splash-screen';
 
 
 const { width } = Dimensions.get('window');
@@ -57,7 +45,7 @@ const routeConfigs = {
         },
     },
     Cart: {
-        screen: Home,
+        screen: Cart,
         navigationOptions: {
             tabBarLabel: 'Cart',
             tabBarIcon: ({ focused }) => {
@@ -182,26 +170,18 @@ export default class App extends React.Component {
         this.state = {
             arrCart: [],
             refresh: false,
+            token:''
         };
         Global.addProductToCart = this.addProductToCart.bind(this);
         Global.increaseQuantity = this.increaseQuantity.bind(this);
         Global.decreaseQuantity = this.decreaseQuantity.bind(this);
         Global.removeProduct = this.removeProduct.bind(this);
         Global.removeCart = this.removeCart.bind(this);
+        Global.updateCart = this.updateCart.bind(this);
     }
 
-    componentWillMount() {
-        getCart().then(arrCart => this.setState({ arrCart }
-            , () => this.updateProductsInCart()
-        ));
-    }
-
-    componentDidMount() {
-        
-    }
-
-    addProductToCart(product) {
-        const check = this.state.arrCart.findIndex(e => e.product.id === product.id);
+    addProductToCart(product, quantity, orderItemSeqId, orderId) {
+        const check = this.state.arrCart.findIndex(e => e.product.productId === product.productId);
         if (check !== -1) { // this product is exist in cart
             const newCart = this.state.arrCart;
             newCart.splice(check, 1, { product, quantity: newCart[check].quantity + 1 });
@@ -210,30 +190,68 @@ export default class App extends React.Component {
             );
         } else {
             this.setState({
-                arrCart: this.state.arrCart.concat({ product, quantity: 1 }),
+                arrCart: this.state.arrCart.concat({ product, quantity: quantity, orderItemSeqId: orderItemSeqId, orderId: orderId}),
             }, () => this.updateProductsInCart());
         }
     }
 
     updateProductsInCart() {
         Global.productsInCart = this.state.arrCart;
-        saveCart(this.state.arrCart);
+        addCart(this.state.arrCart);
     }
 
-    increaseQuantity(productId) {
+    async setToken(){
+        this.setState({token: await getToken()})
+        if(this.state.token){
+            this.saveToken();
+        }
+    }
+
+    saveToken(){
+        getCart()
+        .then(res => res.length === 0 ?
+            getCustomerCart()
+            .then(res => res.orderItemList.map(item =>
+                    getProductById(item.productId)
+                    .then(resp => this.addProductToCart(resp, item.quantity, item.orderId, item.orderItemSeqId))
+                )
+            )
+            : this.setState({arrCart: res}, () => this.updateProductsInCart())
+        )
+    }
+
+    componentWillMount(){
+        this.setToken();
+        
+    }
+
+    updateCart(){
+        this.setToken();
+    }
+
+    increaseQuantity(productId, orderId, orderItemSeqId) {
+        var updatedQuantity
         const newArrCart = this.state.arrCart.map(e => {
-            if (e.product.id !== productId) return e;
-            return { product: e.product, quantity: e.quantity + 1 };
+            if (e.product.productId !== productId) return e;
+            updatedQuantity = e.quantity + 1
+            return { product: e.product, quantity: e.quantity + 1, orderItemSeqId: orderItemSeqId, orderId: orderId };
             // return (e.product.id !== productId) ? e : { product: e.product, quantity: e.quantity + 1 };
         });
-        this.setState({ arrCart: newArrCart },
-            () => this.updateProductsInCart()
-        );
+        updateQuantity(orderId, orderItemSeqId, updatedQuantity)
+        .then(
+                this.setState({ arrCart: newArrCart },
+                () => this.updateProductsInCart()
+            )
+        )
     }
 
-    decreaseQuantity(productId) {
+    decreaseQuantity(productId, orderId, orderItemSeqId) {
+        var updatedQuantity
         const newArrCart = this.state.arrCart.map(e => {
-            return (e.product.id !== productId) ? e : { product: e.product, quantity: e.quantity > 1 ? (e.quantity - 1) : 1 };
+            if (e.product.productId !== productId) return e; 
+            updatedQuantity = e.quantity > 1 ? (e.quantity - 1) : 1 ;
+            updateQuantity(orderId, orderItemSeqId, updatedQuantity);
+            return ({ product: e.product, quantity: e.quantity > 1 ? (e.quantity - 1) : 1 });
         });
         this.setState({ arrCart: newArrCart },
             () => this.updateProductsInCart()
@@ -241,7 +259,7 @@ export default class App extends React.Component {
     }
 
     removeProduct(productId) {
-        const newCart = this.state.arrCart.filter(e => e.product.id !== productId);
+        const newCart = this.state.arrCart.filter(e => e.product.productId !== productId);
         this.setState({ arrCart: newCart },
             () => this.updateProductsInCart()
         );
@@ -252,16 +270,6 @@ export default class App extends React.Component {
             () => this.updateProductsInCart()
         );
     }
-
-    // cach khac:
-    // removeProduct(productId) {
-    //   const start = this.state.arrCart.findIndex(e => e.product.id === productId);
-    //   const newCart = this.state.arrCart;
-    //   newCart.splice(start, 1);
-    //   this.setState({ arrCart: newCart },
-    //     () => this.updateProductsInCart()  
-    //   );
-    // }
 
     render() {
         return (

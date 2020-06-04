@@ -4,11 +4,12 @@ import Collection from './Collection';
 import Header from './Header';
 import Category from './Category';
 import TopProducts from './TopProducts';
-import { localhost } from './localhost';
 import checkLogin from './api/checkLogin';
 import getToken from './api/getToken';
 import Global from './Global';
-import refreshToken from './api/refreshToken';
+import {localhost} from './localhost';
+import getCustomerInfo from './api/getCustomerInfo';
+
 
 export default class HomeView extends Component {
     constructor(props) {
@@ -20,7 +21,7 @@ export default class HomeView extends Component {
     }
 
     componentDidMount() {
-        fetch(`http://192.168.122.1:8080/rest/s1/pop/categories/PopcAllProducts/products`)
+        fetch(`http://${localhost}/rest/s1/pop/categories/PopcAllProducts/products`)
             .then(res => res.json())
             .then(resJSON => {
                 this.setState({
@@ -31,16 +32,14 @@ export default class HomeView extends Component {
             .catch(error => console.log(error));
             
         getToken()
-            .then(token => checkLogin(token))
-            .then(res => {
-                if (res === 'TOKEN_KHONG_HOP_LE') {
-                    return;
-                }
-                Global.onSignIn(res.user);
-            })
+            .then(token => token !== '' &&
+                getCustomerInfo()
+                .then( customerInfo =>  Object.keys(customerInfo).length !== 0 &&
+                    Global.onSignIn(customerInfo)
+                )
+            )
             .catch(err => console.log(err));
 
-        setInterval(() => getToken().then(token => refreshToken(token)), 60000);
     }
 
     render() {

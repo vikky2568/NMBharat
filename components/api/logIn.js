@@ -1,7 +1,7 @@
 import { localhost } from '../localhost';
 
 const logIn = (email, password) => (
-    fetch(`http://192.168.122.1:8080/rest/s1/pop/login`, {
+    fetch(`http://${localhost}/rest/s1/pop/login`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

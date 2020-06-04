@@ -1,7 +1,7 @@
-import { localhost } from '../localhost';
+
 
 const getProductByType = (typeId, page) => (
-    fetch(`http://${localhost}/AppBanHangServer/product_by_type.php?id_type=${typeId}&page=${page}`, {
+    fetch(``, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

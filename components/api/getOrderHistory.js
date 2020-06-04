@@ -1,7 +1,7 @@
-import { localhost } from '../localhost';
+
 
 const getOrderHistory = (token) => (
-    fetch(`http://${localhost}/AppBanHangServer/order_history.php`, {
+    fetch(``, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

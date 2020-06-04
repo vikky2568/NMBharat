@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-navigation';
 import MyButton from './MyButton';
 import Global from './Global';
 import removeToken from './api/removeToken';
+import getToken from './api/getToken';
+import logout from './api/logout';
 
 export default class CustomDrawerContentComponent extends Component {
     constructor(props) {
@@ -11,19 +13,31 @@ export default class CustomDrawerContentComponent extends Component {
         this.state = {
             isLogedIn: false,
             username: '',
+            token: ''
         };
         Global.onSignIn = this.onSignIn.bind(this);
     }
 
     onSignIn(user) {
-        this.setState({ username: user.name, isLogedIn: true });
+        Global.customerInfo = user;
+        this.setState({ username: Global.customerInfo.firstName+' '+Global.customerInfo.lastName, isLogedIn: true });
+        Global.updateCart();
+        this.props.navigation.navigate('Home');
     }
 
     onSignOut() {
         removeToken()
         .then(() => this.setState({ username: '', isLogedIn: false }));
+        Global.customerInfo = '';
+        Global.removeCart();
+        logout()
+        this.setState({token:''});
+        this.props.navigation.navigate('Home');
     }
 
+    async componentWillMount(){
+        this.setState({token: await getToken()})
+    }
     render() {
         // const { navigate } = this.props.navigation;
         const logOutJSX = (
@@ -64,7 +78,7 @@ export default class CustomDrawerContentComponent extends Component {
             </ScrollView>
         );
 
-        return this.state.isLogedIn ? logOutJSX : loginJSX;
+        return this.state.token || this.state.isLogedIn ? logOutJSX : loginJSX;
     }
 }
 

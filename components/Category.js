@@ -2,11 +2,8 @@ import React, { Component } from 'react';
 import {
     View, Text, Dimensions, StyleSheet, ImageBackground, TouchableOpacity, Image
 } from 'react-native';
-import Swiper from 'react-native-swiper';
-import { localhost } from './localhost';
 
 const { width } = Dimensions.get('window');
-const imageUrl = `http://${localhost}/AppBanHangServer/images/type/`;
 
 export default class Category extends Component {
     constructor(props) {

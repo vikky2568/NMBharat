@@ -1,7 +1,7 @@
-import { localhost } from '../localhost';
+
 
 const search = (key) => (
-    fetch(`http://${localhost}/AppBanHangServer/search.php?key=${key}`, {
+    fetch(``, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

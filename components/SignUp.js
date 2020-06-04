@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-//import FloatingLabel from 'react-native-floating-labels';
 import register from './api/register';
 
 export default class SignUp extends Component {
@@ -38,7 +37,8 @@ export default class SignUp extends Component {
 
     removeEmail() {
         this.setState({
-            name: '',
+            firstName: '',
+            lastName: '',
             email: '',
             password: '',
             rePassword: '',
@@ -46,17 +46,16 @@ export default class SignUp extends Component {
             });
     }
 
-    registerUser(email, name, password, phone) {
-        register(email, name, password, phone)
-            //.then(res => (res === 'THANH_CONG' ? this.onSuccess() : this.onFail()));
+    registerUser(firstName, lastName, email, password, rePassword) {
+        register(firstName, lastName, email, password, rePassword)
             .then(res => {
-                if (res === 'THANH_CONG') return this.onSuccess();
+                if (res.messages) return this.onSuccess();
                 this.onFail();
             });
     }
 
     render() {
-        const { name, email, password, rePassword, phone } = this.state;
+        const { firstName, lastName, email, password, rePassword } = this.state;
         return (
             <View style={styles.wrapper}>
                 {/* <FloatingLabel
@@ -67,10 +66,16 @@ export default class SignUp extends Component {
                     Name
                 </FloatingLabel> */}
                 <TextInput
-                    placeholder='Enter your name'
+                    placeholder='Enter your first name'
                     style={styles.textInputStyle}
-                    value={name}
-                    onChangeText={(text) => this.setState({ name: text })}
+                    value={firstName}
+                    onChangeText={(text) => this.setState({ firstName: text })}
+                />
+                <TextInput
+                    placeholder='Enter your last name'
+                    style={styles.textInputStyle}
+                    value={lastName}
+                    onChangeText={(text) => this.setState({ lastName: text })}
                 />
                 <TextInput
                     placeholder='Enter your email'
@@ -79,25 +84,21 @@ export default class SignUp extends Component {
                     onChangeText={(text) => this.setState({ email: text })}
                 />
                 <TextInput
-                    placeholder='Enter your phone number'
-                    style={styles.textInputStyle}
-                    value={phone}
-                    onChangeText={(text) => this.setState({ phone: text })}
-                />
-                <TextInput
                     placeholder='Enter your password'
                     style={styles.textInputStyle}
                     value={password}
                     onChangeText={(text) => this.setState({ password: text })}
+                    secureTextEntry
                 />
                 <TextInput
                     placeholder='Re-enter your password'
                     style={styles.textInputStyle}
                     value={rePassword}
                     onChangeText={(text) => this.setState({ rePassword: text })}
+                    secureTextEntry
                 />
                 <TouchableOpacity
-                    onPress={() => this.registerUser(email, name, password, phone)}
+                    onPress={() => this.registerUser(firstName, lastName, email, password, rePassword)}
                 >
                     <View style={styles.button}>
                         <Text style={styles.text}>SIGN UP</Text>

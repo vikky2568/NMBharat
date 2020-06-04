@@ -2,11 +2,7 @@ import React, { Component } from 'react';
 import { View, Text, TextInput, Image, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
 import Global from './Global';
 import search from './api/search';
-//import NavigationService from './NavigationService';
-//import { withNavigation } from 'react-navigation';
 
-
-// const screen = Dimensions.get('window');
 
 class Header extends Component {
 

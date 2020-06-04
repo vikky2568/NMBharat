@@ -6,20 +6,15 @@ import {
 
 import Toast from 'react-native-simple-toast';
 import { withNavigationFocus } from 'react-navigation';
-import { localhost } from './localhost';
 
 import Global from './Global';
 import Header from './Header';
 import checkout from './api/checkout';
 import getToken from './api/getToken';
-import removeCart from './api/removeCart';
-
-
-// function toTitleCase(str) {
-//   return str.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
-// }
-
-const imageUrl = `http://${localhost}/AppBanHangServer/images/product/`;
+import deleteOrderItem from './api/deleteOrderItem';
+import getShippingAddress from './api/getShippingAddress';
+import placeOrder from './api/placeOrder';
+import { localhost } from './localhost';
 
 class Cart extends Component {
     constructor(props) {
@@ -29,41 +24,54 @@ class Cart extends Component {
         };
     }
 
-    onCheckout(arrCart) {
-        const arrDetail = arrCart.map(e => ({ id: e.product.id, quantity: e.quantity }));
-        getToken()
-            .then(token => checkout(token, arrDetail))
+    isEmptyObject(obj) {
+        for (var key in obj) {
+          if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+    onCheckout() {
+        getShippingAddress()
+        .then( res => Object.keys(res).length === 0 ?
+            this.props.navigation.navigate('CustomerShippingAddress')
+            :
+            placeOrder()
             .then(res => {
-                if (res === 'THEM_THANH_CONG') {
+                if (res.orderHeader.statusId === 'OrderPlaced') {
                     Global.removeCart();
-                    this.setState({ refresh: !this.state.refresh }); //render lai 
-                    Toast.show('Order successfully!', Toast.LONG);
+                    this.setState({ refresh: !this.state.refresh });
+                    Toast.show('Order '+ res.orderHeader.orderId +' placed successfully!', Toast.LONG);
                 } else {
                     Toast.show('Order failed!', Toast.LONG);
                 }
-            })
-            .catch(err => console.log(err));
+            })   
+        )
     }
 
-    increaseQuantity(id) {
-        Global.increaseQuantity(id);
+    increaseQuantity(id, orderId, orderItemSeqId) {
+        Global.increaseQuantity(id, orderId, orderItemSeqId);
         this.setState({ refresh: !this.state.refresh },
-            () => this.forceUpdate() // render lai 2 lan, lenh forceUpdate() se thuc hien sau lenh Global.increaseQuantity(id);
+            () => this.forceUpdate() 
         );
     }
 
-    decreaseQuantity(id) {
-        Global.decreaseQuantity(id);
+    decreaseQuantity(id, orderId, orderItemSeqId) {
+        Global.decreaseQuantity(id, orderId, orderItemSeqId);
         this.setState({ refresh: !this.state.refresh },
-            () => this.forceUpdate() // render lai 2 lan
+            () => this.forceUpdate()
         );
     }
 
-    removeProduct(id) {
+    removeProduct(id, orderId, orderItemSeqId) {
+        deleteOrderItem(orderId, orderItemSeqId)
+
         Global.removeProduct(id);
 
         this.setState({ refresh: !this.state.refresh },
-            () => this.forceUpdate() // render lai 2 lan
+            () => this.forceUpdate()
         );
     }
 
@@ -75,9 +83,8 @@ class Cart extends Component {
             txtShowDetail, showDetailContainer } = styles;
         //const item = this.props.navigation.getParam('item', 'null');
         const arrCart = Global.productsInCart;
-        const arr = arrCart.map(e => e.product.id * e.quantity); // price * quantity
+        const arr = arrCart.map(e => e.product.price * e.quantity); // price * quantity
         const total = arr.length !== 0 ? arr.reduce((previouValue, currentValue) => previouValue + currentValue) : 0;
-
         
         return (
 
@@ -85,32 +92,33 @@ class Cart extends Component {
                 <Header navigation={this.props.navigation} />
                 <ScrollView style={main}>
                     {
-                        arrCart.map(item => (
-                            <View style={product} key={item.product.id}>
-                                <Image source={{ uri: item.product.download_url }} style={productImage} />
+                        arrCart.map(item => 
+                            (
+                            <View style={product} key={item.product.productId}>
+                                <Image source={{ uri: 'http://'+localhost+'/store/content/productImage/'+item.product.contentList[0].productContentId }} style={productImage} />
                                 <View style={mainRight}>
                                     <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
-                                        <Text style={txtName}>{item.product.author}</Text>
-                                        <TouchableOpacity onPress={() => this.removeProduct(item.product.id)}>
+                                        <Text style={txtName}>{item.product.productName}</Text>
+                                        <TouchableOpacity onPress={() => this.removeProduct(item.product.productId, item.orderId, item.orderItemSeqId)}>
                                             <Text style={{ color: '#969696' }}>X</Text>
                                         </TouchableOpacity>
                                     </View>
                                     <View>
-                                        <Text style={txtPrice}>{item.product.id}₹</Text>
+                                        <Text style={txtPrice}>{item.product.price}₹</Text>
                                     </View>
                                     <View style={productController}>
                                         <View style={numberOfProduct}>
-                                            <TouchableOpacity onPress={() => this.increaseQuantity(item.product.id)}>
+                                            <TouchableOpacity onPress={() => this.increaseQuantity(item.product.productId, item.orderId, item.orderItemSeqId)}>
                                                 <Text>+</Text>
                                             </TouchableOpacity>
                                             <Text>{item.quantity}</Text>
-                                            <TouchableOpacity onPress={() => this.decreaseQuantity(item.product.id)}>
+                                            <TouchableOpacity onPress={() => this.decreaseQuantity(item.product.productId, item.orderId, item.orderItemSeqId)}>
                                                 <Text>-</Text>
                                             </TouchableOpacity>
                                         </View>
                                         <TouchableOpacity
                                             style={showDetailContainer}
-                                            onPress={() => this.props.navigation.navigate('ProductDetails', { product: item.product })}
+                                            onPress={() => this.props.navigation.navigate('ProductDetails', { product: item.product.productId })}
                                         >
                                             <Text style={txtShowDetail} >SHOW DETAILS</Text>
                                         </TouchableOpacity>
@@ -118,14 +126,16 @@ class Cart extends Component {
                                 </View>
                             </View>
                         ))
-                    }
+                    } 
                 </ScrollView>
-                <TouchableOpacity style={checkoutButton} onPress={() => this.onCheckout(arrCart)}>
-                    <Text style={checkoutTitle}>TOTAL {total}₹ CHECKOUT NOW</Text>
-                </TouchableOpacity>
+                {total > 0.00 &&
+                    <TouchableOpacity style={checkoutButton} onPress={() => this.onCheckout()}>
+                        <Text style={checkoutTitle}>TOTAL {total.toFixed(2)}₹ CHECKOUT NOW</Text>
+                    </TouchableOpacity>
+                 }
             </View>
         );
-    }
+    }   
 }
 
 const { width } = Dimensions.get('window');

@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
 import { View, Text, Image, Dimensions, StyleSheet, TouchableOpacity } from 'react-native';
 import GridView from 'react-native-super-grid';
-import { localhost } from './localhost';
+import {localhost} from './localhost';
 
 const { width } = Dimensions.get('window');
 
-const imageUrl = `http://${localhost}/AppBanHangServer/images/product/`;
 export default class TopProducts extends Component {
     constructor(props) {
         super(props);
@@ -29,7 +28,7 @@ export default class TopProducts extends Component {
                         >
                             <View style={styles.wrapper2}>
                                 <Image
-                                    source={{ uri: 'http://192.168.122.1:8080/store/content/productImage/'+item.item.smallImageInfo.productContentId }}
+                                    source={{ uri: 'http://'+localhost+'/store/content/productImage/'+item.item.smallImageInfo.productContentId }}
                                     style={styles.imageStyle}
                                 />
                                 <Text style={styles.productName}>{item.item.productName}</Text>
